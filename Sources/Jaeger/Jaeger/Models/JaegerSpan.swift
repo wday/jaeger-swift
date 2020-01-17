@@ -7,6 +7,18 @@
 
 import Foundation
 
+typealias Int64HexString = Int64
+
+extension Int64HexString {
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        
+        try container.encode("\(self)")
+    }
+}
+
+
 /**
  The Jaeger version of an OpenTracing Span.
  
@@ -64,7 +76,7 @@ public struct JaegerSpan: SpanConvertible {
      
      See the [Jaeger.Thrift](https://github.com/jaegertracing/jaeger-idl/blob/master/thrift/jaeger.thrift) definition.
      */
-    struct JaegerSpanReference: Codable { // Jaeger.Thrift original def
+    struct JaegerSpanReference { // Jaeger.Thrift original def
 
         /**
          Creates a Jaeger Span Reference from an OpenTracing Span Reference.
@@ -133,4 +145,32 @@ public struct JaegerSpan: SpanConvertible {
     let logs: [JaegerLog]?
     /// A boolean indicating if the task is incomplete.
     let incomplete: Bool?
+}
+
+private func hexify(x: Int64) -> String {
+    return String(format: "%02X", x)
+}
+
+extension JaegerSpan: Encodable {
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(hexify(x: traceIdLow), forKey: .traceIdLow)
+        try container.encode(hexify(x: traceIdHigh), forKey: .traceIdHigh)
+        try container.encode(hexify(x: startTime), forKey: .startTime)
+        try container.encode(hexify(x: duration), forKey: .duration)
+        try container.encode(hexify(x: parentSpanId), forKey: .parentSpanId)
+        try container.encode(hexify(x: spanId), forKey: .spanId)
+    }
+}
+
+extension JaegerSpan.JaegerSpanReference: Codable {
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(hexify(x: traceIdHigh), forKey: .traceIdHigh)
+        try container.encode(hexify(x: traceIdLow), forKey: .traceIdLow)
+        try container.encode(hexify(x: spanId), forKey: .spanId)
+        try container.encode(refType, forKey: .refType)
+    }
 }
