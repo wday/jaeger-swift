@@ -148,7 +148,7 @@ public struct JaegerSpan: SpanConvertible {
 }
 
 private func hexify(x: Int64) -> String {
-    return String(format: "%02X", x)
+    return String(format: "%016lX", x)
 }
 
 extension JaegerSpan: Encodable {
